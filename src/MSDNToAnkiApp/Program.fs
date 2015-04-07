@@ -1,6 +1,9 @@
 ﻿open System
 open HtmlAgilityPack
 
+let htmlDecode str =
+  System.Net.WebUtility.HtmlDecode(str)
+
 let selectNodes (node:HtmlNode) (xpath:string) =
   node.SelectNodes(xpath)
 
@@ -13,7 +16,14 @@ let extractTableInfo (headings:HtmlNodeCollection) targetHeading =
   else Seq.empty
 
 let parseValue url =
-  failwith "Not implemented"
+  let web = new HtmlWeb()
+  let doc = web.Load(url)
+  let name = htmlDecode (doc.DocumentNode.SelectSingleNode("//h1[@class='title']").InnerText.Trim())
+  let description = htmlDecode (doc.DocumentNode.SelectSingleNode("//div[@class='introduction']/p[1]").InnerText.Trim())
+
+  printfn "%s\n%s\n" name description
+  //todo: Extract the screenshot of any example code
+  //todo: Export these to cards
 
 let parseTypeAbbreviation url =
   failwith "Not implemented"
@@ -22,13 +32,15 @@ let parseType url =
   failwith "Not implemented"
 
 let parseModule url =
-  failwith "Not implemented"
+  let web = new HtmlWeb()
+  let doc = web.Load(url)
+  let headings = selectNodes doc.DocumentNode "//h2[@class='LW_CollapsibleArea_TitleDiv']"
+  extractTableInfo headings "Values" |> Seq.iter parseValue
 
 let parseNamespace url =
   let web = new HtmlWeb()
   let doc = web.Load(url)
   let headings = selectNodes doc.DocumentNode "//h2[@class='LW_CollapsibleArea_TitleDiv']"
-  headings |> Seq.iter (fun h -> printfn "%A" (h.InnerText.Trim()))
   
   extractTableInfo headings "Modules" |> Seq.iter parseModule
   extractTableInfo headings "Type Definitions" |> Seq.iter parseType
