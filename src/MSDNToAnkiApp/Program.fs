@@ -64,17 +64,19 @@ let parseType url =
   ()
   //todo: Export these to cards
 
-let parseModule url =
+let rec parseModule url =
   let headings = getHeadings url
   extractTableInfo headings "Values" |> Seq.iter parseValue
+  extractTableInfo headings "Modules" |> Seq.iter parseModule
   //todo: Extract screenshot of any example code (see https://msdn.microsoft.com/en-us/library/ee353880.aspx)
 
-let parseNamespace url =
+let rec parseNamespace url =
   let headings = getHeadings url
   
   extractTableInfo headings "Modules" |> Seq.iter parseModule
   extractTableInfo headings "Type Definitions" |> Seq.iter parseType
   extractTableInfo headings "Type Abbreviations" |> Seq.iter parseTypeAbbreviation
+  extractTableInfo headings "Namespaces" |> Seq.iter parseNamespace
 
 let parseLibrary (url:string) =
   let web = new HtmlWeb()
