@@ -1,14 +1,11 @@
 ﻿open System
 open HtmlAgilityPack
 
-let htmlDecode str =
-  System.Net.WebUtility.HtmlDecode(str)
+let htmlDecode str = System.Net.WebUtility.HtmlDecode(str)
 
-let selectNodes (node:HtmlNode) (xpath:string) =
-  node.SelectNodes(xpath)
+let selectNodes (node:HtmlNode) (xpath:string) = node.SelectNodes(xpath)
 
-let trySelectNodes node xpath =
-  try Some(selectNodes node xpath) with | _ -> None
+let trySelectNodes node xpath = try Some(selectNodes node xpath) with | _ -> None
 
 let extractTableInfo (headings:HtmlNodeCollection) targetHeading =
   if headings |> Seq.exists (fun h -> h.InnerText.Trim() = targetHeading) then
@@ -45,7 +42,7 @@ let parseTypeAbbreviation url =
   let doc = web.Load(url)
   let name = htmlDecode (doc.DocumentNode.SelectSingleNode("//h1[@class='title']").InnerText.Trim())
   let description = htmlDecode (doc.DocumentNode.SelectSingleNode("//div[@class='introduction']/p[1]").InnerText.Trim())
-
+  
   ()
   //todo: Extract the screenshot above the remark.
   //todo: export type abbrevations to cards.
@@ -79,11 +76,7 @@ let rec parseNamespace url =
   extractTableInfo headings "Namespaces" |> Seq.iter parseNamespace
 
 let parseLibrary (url:string) =
-  let web = new HtmlWeb()
-  let doc = web.Load(url)
-  let namespaces = doc.DocumentNode.SelectNodes("//a[@id='sectionToggle1']/../div//tr//td[1]//a")
-                    |> Seq.map (fun a -> a.Attributes.["href"].Value)
-  namespaces |> Seq.iter parseNamespace
+  extractTableInfo (getHeadings url) "Related Topics" |> Seq.iter parseNamespace
 
 [<EntryPoint>]
 let main argv = 
