@@ -41,7 +41,14 @@ let parseValue url =
   //todo: Export these to cards
 
 let parseTypeAbbreviation url =
-  failwith "Not implemented"
+  let web = new HtmlWeb()
+  let doc = web.Load(url)
+  let name = htmlDecode (doc.DocumentNode.SelectSingleNode("//h1[@class='title']").InnerText.Trim())
+  let description = htmlDecode (doc.DocumentNode.SelectSingleNode("//div[@class='introduction']/p[1]").InnerText.Trim())
+
+  ()
+  //todo: Extract the screenshot above the remark.
+  //todo: export type abbrevations to cards.
 
 let parseType url =
   let web = new HtmlWeb()
