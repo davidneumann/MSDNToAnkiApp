@@ -7,6 +7,14 @@ let selectNodes (node:HtmlNode) (xpath:string) =
 let trySelectNodes node xpath =
   try Some(selectNodes node xpath) with | _ -> None
 
+let extractTableInfo (headings:HtmlNodeCollection) targetHeading =
+  if headings |> Seq.exists (fun h -> h.InnerText.Trim() = targetHeading) then
+    headings |> Seq.find (fun h -> h.InnerText.Trim() = targetHeading) |> (fun h -> selectNodes h "..//tr//td[1]//a") |> Seq.map (fun n -> n.Attributes.["href"].Value)
+  else Seq.empty
+
+let parseValue url =
+  failwith "Not implemented"
+
 let parseTypeAbbreviation url =
   failwith "Not implemented"
 
@@ -22,22 +30,9 @@ let parseNamespace url =
   let headings = selectNodes doc.DocumentNode "//h2[@class='LW_CollapsibleArea_TitleDiv']"
   headings |> Seq.iter (fun h -> printfn "%A" (h.InnerText.Trim()))
   
-  let modules = 
-    if headings |> Seq.exists (fun h -> h.InnerText.Trim() = "Modules") then
-      headings |> Seq.find (fun h -> h.InnerText.Trim() = "Modules") |> (fun h -> selectNodes h "..//tr//td[1]//a") |> Seq.map (fun n -> n.Attributes.["href"].Value)
-    else Seq.empty
-  let types = 
-    if headings |> Seq.exists (fun h -> h.InnerText.Trim() = "Type Definitions") then
-      headings |> Seq.find (fun h -> h.InnerText.Trim() = "Type Definitions") |> (fun h -> selectNodes h "..//tr//td[1]//a") |> Seq.map (fun n -> n.Attributes.["href"].Value)
-    else Seq.empty
-  let typeAbbrevations =
-    if headings |> Seq.exists (fun h -> h.InnerText.Trim() = "Type Abbreviations") then
-      headings |> Seq.find (fun h -> h.InnerText.Trim() = "Type Abbreviations") |> (fun h -> selectNodes h "..//tr//td[1]//a") |> Seq.map (fun n -> n.Attributes.["href"].Value)
-    else Seq.empty
-  
-  modules |> Seq.iter parseModule
-  types |> Seq.iter parseType
-  typeAbbrevations |> Seq.iter parseTypeAbbreviation
+  extractTableInfo headings "Modules" |> Seq.iter parseModule
+  extractTableInfo headings "Type Definitions" |> Seq.iter parseType
+  extractTableInfo headings "Type Abbreviations" |> Seq.iter parseTypeAbbreviation
 
 let parseLibrary (url:string) =
   let web = new HtmlWeb()
